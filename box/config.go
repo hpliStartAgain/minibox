@@ -9,6 +9,11 @@ type Config struct {
 	Grace    time.Duration `json:"-"`
 	Hostname string
 	Faults   []string
+	Rootfs   string
+	ReadOnly bool
+	Binds    map[string]string
+	RWBinds  map[string]string
+	Cwd      string
 }
 
 type Reason string
