@@ -73,7 +73,7 @@ func Run(ctx context.Context, cfg Config) (Result, error) {
 	if !cfg.fault("no-pidns") {
 		flags |= syscall.CLONE_NEWPID
 	}
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true, Cloneflags: flags, Pdeathsig: syscall.SIGKILL}
 	cmd.Cancel = func() error {
 		return syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM)
 	}
