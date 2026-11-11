@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"syscall"
 	"time"
@@ -51,6 +52,39 @@ func main() {
 			_ = c.Start()
 		}
 		time.Sleep(30 * time.Second)
+	case "ls":
+		ents, err := os.ReadDir(arg(1, "/"))
+		var names []string
+		for _, e := range ents {
+			names = append(names, e.Name())
+		}
+		sort.Strings(names)
+		fmt.Println(err, names)
+	case "write":
+		err := os.WriteFile(arg(1, "/x"), []byte("hi"), 0o644)
+		fmt.Printf("写 %s -> %v\n", arg(1, "/x"), err)
+	case "cat":
+		b, err := os.ReadFile(arg(1, "/etc/passwd"))
+		fmt.Printf("读 /proc/1/root -> %d 项 err=%v\n", len(b), err)
+	case "proc1root":
+		ents, err := os.ReadDir("/proc/1/root")
+		fmt.Printf("读 /proc/1/root/ -> %d 项 err=%v\n", len(ents), err)
+	case "chroot-escape":
+		_ = os.MkdirAll("/tmp/esc", 0o755)
+		if err := syscall.Chroot("/tmp/esc"); err != nil {
+			fmt.Println("chroot ->", err)
+			return
+		}
+		for range 8 {
+			_ = syscall.Chdir("..")
+		}
+		err := syscall.Chroot(".")
+		ents, _ := os.ReadDir("/")
+		var names []string
+		for _, e := range ents {
+			names = append(names, e.Name())
+		}
+		fmt.Printf("chroot(.) -> %v; 现在看到的 / = %v\n", err, names)
 	default:
 		fmt.Println("unkonwn", args)
 		os.Exit(64)

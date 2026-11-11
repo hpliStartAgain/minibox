@@ -41,9 +41,26 @@ func initStage() error {
 	if len(c.Argv) == 0 {
 		return stage("config", errors.New("empty argv"))
 	}
+	// 后面的课会在这里依次插入各种隔离步骤
 	if c.Hostname != "" {
 		if err := syscall.Sethostname([]byte(c.Hostname)); err != nil {
 			return stage("sethostname", err)
+		}
+	}
+	// 关键：把整棵挂载树设为 private，否则在 shared 传播的宿主上，下面的 mount 会泄漏回宿主。
+	if !c.fault("no-private") {
+		if err := syscall.Mount("", "/", "", syscall.MS_REC|syscall.MS_PRIVATE, ""); err != nil {
+			return stage("make-rprivate", err)
+		}
+	}
+	if c.Rootfs != "" {
+		if err := setupRoot(c); err != nil {
+			return err
+		}
+	}
+	if c.Cwd != "" {
+		if err := syscall.Chdir(c.Cwd); err != nil {
+			return stage("chdir", err)
 		}
 	}
 	return stage("exec", syscall.Exec(c.Argv[0], c.Argv, c.Env))

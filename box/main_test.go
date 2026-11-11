@@ -24,6 +24,8 @@ func TestMain(m *testing.M) {
 	}
 	_ = os.Chmod(dir, 0o755)
 	_ = os.MkdirAll(filepath.Join(dir, "bin"), 0o755)
+	_ = os.MkdirAll(filepath.Join(dir, "etc"), 0o755)
+	_ = os.WriteFile(filepath.Join(dir, "etc", "hostname"), []byte("box\n"), 0o644)
 	build := exec.Command("go", "build", "-o", filepath.Join(dir, "bin", "payload"), "example.com/minibox/payload")
 	build.Env = append(os.Environ(), "CGO_ENABLE=0")
 	if out, err := build.CombinedOutput(); err != nil {

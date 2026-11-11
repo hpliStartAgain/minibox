@@ -19,7 +19,11 @@ func base() box.Config {
 
 func P(t *testing.T, cfg box.Config, args ...string) box.Result {
 	t.Helper()
-	cfg.Argv = append([]string{payload}, args...)
+	exe := payload
+	if cfg.Rootfs != "" {
+		exe = "/bin/payload"
+	}
+	cfg.Argv = append([]string{exe}, args...)
 	return run(t, cfg)
 }
 
